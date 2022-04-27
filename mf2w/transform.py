@@ -1,3 +1,4 @@
+from re import I
 import numpy as np
 import xarray as xr
 
@@ -13,8 +14,8 @@ def convex_central_angle(angle: np.ndarray, deg=True, axis=0):
 
 def get_dx_dy(grid: xr.Dataset, verbose=False):
     R_EARTH=6371000.7900
-    phi = np.deg2rad(grid.lats.isel(nf=0).values)
-    lam = np.deg2rad(grid.lons.isel(nf=0).values)
+    phi = np.deg2rad(grid.lats.isel(nf=0))
+    lam = np.deg2rad(grid.lons.isel(nf=0))
 
     # todo: review these slices
     dphi = convex_central_angle(phi[0::2,1::2], axis=0, deg=False)
@@ -23,6 +24,9 @@ def get_dx_dy(grid: xr.Dataset, verbose=False):
 
     dy = R_EARTH*dphi
     dx = R_EARTH*cosphi*dlam
+
+    dx = np.asarray(dx)
+    dy = np.asarray(dy)
     
     return dx, dy
 
@@ -30,9 +34,9 @@ def get_dx_dy(grid: xr.Dataset, verbose=False):
 def mass_fluxes_to_winds(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, verbose=False):
     NUM_FV3_TIME_STEPS=8
 
-    mfxc = tavg_1hr_ctm.MFXC.isel(nf=0).values
-    mfyc = tavg_1hr_ctm.MFYC.isel(nf=0).values
-    delp = tavg_1hr_ctm.DELP.isel(nf=0).values
+    mfxc = tavg_1hr_ctm.MFXC.isel(nf=0)
+    mfyc = tavg_1hr_ctm.MFYC.isel(nf=0)
+    delp = tavg_1hr_ctm.DELP.isel(nf=0)
 
     dx, dy = get_dx_dy(grid, verbose)
     
