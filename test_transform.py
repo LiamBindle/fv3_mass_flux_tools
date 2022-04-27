@@ -42,6 +42,48 @@ def test_great_circle_distance():
     result = mf2w.great_circle_distance(lon0, lat0, lon1, lat1)
     assert np.allclose(answer, result, rtol=0.01)
 
+def test_unstagger_cubic():
+    x = np.ones((4,))
+    x_unstaggered = mf2w.unstagger_cubic_interp(x)
+    assert np.allclose(x_unstaggered, [1, 1, 1])
+
+    x = np.array([1, 0, 0, 0])
+    x_unstaggered = mf2w.unstagger_cubic_interp(x)
+    assert np.allclose(x_unstaggered, [0.5, -0.0625, 0])
+
+    x = np.array([0, 1, 0, 0])
+    x_unstaggered = mf2w.unstagger_cubic_interp(x)
+    assert np.allclose(x_unstaggered, [0.5, 0.5625, 0])
+
+    x = np.array([0, 0, 1, 0])
+    x_unstaggered = mf2w.unstagger_cubic_interp(x)
+    assert np.allclose(x_unstaggered, [0, 0.5625, 0.5])
+
+    x = np.array([0, 0, 0, 1])
+    x_unstaggered = mf2w.unstagger_cubic_interp(x)
+    assert np.allclose(x_unstaggered, [0, -0.0625, 0.5])
+
+def test_unstagger_linear():
+    x = np.ones((4,))
+    x_unstaggered = mf2w.unstagger_linear_interp(x)
+    assert np.allclose(x_unstaggered, [1, 1, 1])
+
+    x = np.array([1, 0, 0, 0])
+    x_unstaggered = mf2w.unstagger_linear_interp(x)
+    assert np.allclose(x_unstaggered, [0.5, 0, 0])
+
+    x = np.array([0, 1, 0, 0])
+    x_unstaggered = mf2w.unstagger_linear_interp(x)
+    assert np.allclose(x_unstaggered, [0.5, 0.5, 0])
+
+    x = np.array([0, 0, 1, 0])
+    x_unstaggered = mf2w.unstagger_linear_interp(x)
+    assert np.allclose(x_unstaggered, [0, 0.5, 0.5])
+
+    x = np.array([0, 0, 0, 1])
+    x_unstaggered = mf2w.unstagger_linear_interp(x)
+    assert np.allclose(x_unstaggered, [0, 0, 0.5])
+
 
 def test_dx_dx_calculation_first_face():
     import xarray as xr
@@ -59,6 +101,8 @@ def test_mass_flux_conversion_first_face():
     grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested').isel(nf=0)
     uc, vc = mf2w.mass_fluxes_to_winds(tavg_1hr_ctm, grid)
     #magnitude = np.sqrt(uc*uc + vc*vc)
-    magnitude = np.sqrt(uc.isel(Ydim=slice(0, -1))**2 + vc.isel(Xdim=slice(0, -1))**2)
-    avg_magnitude_surface = np.mean(magnitude[0,-1,:,:])
+    #magnitude = np.sqrt(uc.isel(Ydim=slice(0, -1))**2 + vc.isel(Xdim=slice(0, -1))**2)
+    ua, va = mf2w.cgrid_to_agrid(uc, vc)
+    magnitude = np.sqrt(ua*ua + va*va)
+    avg_magnitude_surface = np.nanmean(magnitude[0,-1,:,:])
     assert 5.0 < avg_magnitude_surface < 7.0,f"calculated avg. wind speed: {avg_magnitude_surface} m/s; expected: ~7.5 m/s"  # actual magnitude should be ~7.5 m/s
