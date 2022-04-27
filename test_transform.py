@@ -33,10 +33,20 @@ def test_meridional_difference_across_pm():
     meridion_difference(angle1=5, angle2=300, answer=65).run_test()
 
 
-def test_dx_dx_calculation():
+def test_great_circle_distance():
+    lat0 = np.array([78.0])
+    lon0 = np.array([-110.1])
+    lat1 = np.array([72.0])
+    lon1 = np.array([70.0])
+    answer = np.array([3349970])
+    result = mf2w.great_circle_distance(lon0, lat0, lon1, lat1)
+    assert np.allclose(answer, result, rtol=0.01)
+
+
+def test_dx_dx_calculation_first_face():
     import xarray as xr
-    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested')
-    dx, dy = mf2w.get_dx_dy(grid, verbose=True)
+    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested').isel(nf=0)
+    dx, dy = mf2w.get_dx_dy(grid)
     avg_dx = np.mean(dx) / 1e3
     avg_dy = np.mean(dy) / 1e3
     assert 12 < avg_dx < 13, f"false: 12 km < avg_dx={avg_dx} km < 13 km"
@@ -45,9 +55,10 @@ def test_dx_dx_calculation():
 
 def test_mass_flux_conversion_first_face():
     import xarray as xr
-    tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4")
-    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested')
-    uc, vc = mf2w.mass_fluxes_to_winds(tavg_1hr_ctm, grid, True)
-    magnitude = np.sqrt(uc*uc + vc*vc)
+    tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4").isel(nf=0)
+    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested').isel(nf=0)
+    uc, vc = mf2w.mass_fluxes_to_winds(tavg_1hr_ctm, grid)
+    #magnitude = np.sqrt(uc*uc + vc*vc)
+    magnitude = np.sqrt(uc.isel(Ydim=slice(0, -1))**2 + vc.isel(Xdim=slice(0, -1))**2)
     avg_magnitude_surface = np.mean(magnitude[0,-1,:,:])
     assert 5.0 < avg_magnitude_surface < 7.0,f"calculated avg. wind speed: {avg_magnitude_surface} m/s; expected: ~7.5 m/s"  # actual magnitude should be ~7.5 m/s
