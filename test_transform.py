@@ -106,3 +106,15 @@ def test_mass_flux_conversion_first_face():
     magnitude = np.sqrt(ua*ua + va*va)
     avg_magnitude_surface = np.nanmean(magnitude[0,-1,:,:])
     assert 5.0 < avg_magnitude_surface < 7.0,f"calculated avg. wind speed: {avg_magnitude_surface} m/s; expected: ~7.5 m/s"  # actual magnitude should be ~7.5 m/s
+
+
+def test_loading_mass_fluxes():
+    import xarray as xr
+    tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4")
+    mfxc, delpx = mf2w.get_full_mfxc_delpx(tavg_1hr_ctm, 0)
+    mfyc, delpy = mf2w.get_full_mfyc_delpy(tavg_1hr_ctm, 0)
+
+    assert mfxc.shape == (1, 72, 720, 721)
+    assert delpx.shape == (1, 72, 720, 721)
+    assert mfyc.shape == (1, 72, 721, 720)
+    assert delpy.shape == (1, 72, 721, 720)
