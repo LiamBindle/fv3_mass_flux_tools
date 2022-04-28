@@ -88,20 +88,23 @@ def get_dx_dy_better(grid: xr.Dataset):
     return dx, dy
 
 
-def mass_fluxes_to_winds(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset):
+def mass_fluxes_to_winds(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, nf: int):
     NUM_FV3_TIME_STEPS=8
 
-    mfxc = tavg_1hr_ctm.MFXC
-    mfyc = tavg_1hr_ctm.MFYC
-    delp = tavg_1hr_ctm.DELP
+    #mfxc = tavg_1hr_ctm.MFXC
+    #mfyc = tavg_1hr_ctm.MFYC
+    #delp = tavg_1hr_ctm.DELP
+    #mfxc = mfxc.pad(Xdim=(0, 1), constant_values=np.nan)
+    #mfyc = mfyc.pad(Ydim=(0, 1), constant_values=np.nan)
+    #delpx = delp.pad(Xdim=(0, 1), constant_values=np.nan)
+    #delpy = delp.pad(Ydim=(0, 1), constant_values=np.nan)
 
+    mfxc, delpx = get_full_mfxc_delpx(tavg_1hr_ctm, nf)
+    mfyc, delpy = get_full_mfyc_delpy(tavg_1hr_ctm, nf)
+    
     #dx, dy = get_dx_dy(grid)
 
-    mfxc = mfxc.pad(Xdim=(0, 1), constant_values=np.nan)
-    mfyc = mfyc.pad(Ydim=(0, 1), constant_values=np.nan)
-    delpx = delp.pad(Xdim=(0, 1), constant_values=np.nan)
-    delpy = delp.pad(Ydim=(0, 1), constant_values=np.nan)
-    dx, dy = get_dx_dy_better(grid)
+    dx, dy = get_dx_dy_better(grid.isel(nf=nf))
     
     # mfxc and mfyc appear to be in units of degrees accidentally; therefore, convert to radians
     mfxc = np.deg2rad(mfxc)

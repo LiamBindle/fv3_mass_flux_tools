@@ -97,14 +97,14 @@ def test_dx_dx_calculation_first_face():
 
 def test_mass_flux_conversion_first_face():
     import xarray as xr
-    tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4").isel(nf=0)
-    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested').isel(nf=0)
-    uc, vc = mf2w.mass_fluxes_to_winds(tavg_1hr_ctm, grid)
+    tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4")
+    grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested')
+    uc, vc = mf2w.mass_fluxes_to_winds(tavg_1hr_ctm, grid, 0)
     #magnitude = np.sqrt(uc*uc + vc*vc)
     #magnitude = np.sqrt(uc.isel(Ydim=slice(0, -1))**2 + vc.isel(Xdim=slice(0, -1))**2)
     ua, va = mf2w.cgrid_to_agrid(uc, vc)
     magnitude = np.sqrt(ua*ua + va*va)
-    avg_magnitude_surface = np.nanmean(magnitude[0,-1,:,:])
+    avg_magnitude_surface = np.mean(magnitude[0,-1,:,:])
     assert 5.0 < avg_magnitude_surface < 7.0,f"calculated avg. wind speed: {avg_magnitude_surface} m/s; expected: ~7.5 m/s"  # actual magnitude should be ~7.5 m/s
 
 
