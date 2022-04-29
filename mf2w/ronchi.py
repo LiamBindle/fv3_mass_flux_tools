@@ -191,7 +191,8 @@ def spherical_to_gmao(phi, theta, gmao_face: int):
         ])
     Rm = spherical_to_ronchi(phi, theta, ronchi_face=ronchi_face)
     G  = np.linalg.inv(gmao_to_ronchi) @ Rm
-    return G
+    mag = np.sqrt(np.einsum('ijkl,ijkl->ijk', G, G))
+    return G/np.expand_dims(mag, -1)
 
 
 
