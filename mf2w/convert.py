@@ -22,7 +22,7 @@ def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
             x = grid.isel(nf=nf, yc=slice(1, None, 2), xc=slice(1, None, 2)).lons.squeeze().values
             x[x > 180] -= 360
             y = grid.isel(nf=nf, yc=slice(1, None, 2), xc=slice(1, None, 2)).lats.squeeze().values
-            M = mf2w.spherical_to_gmao(np.deg2rad(x), np.deg2rad(90-y), gmao_face=nf+1)
+            M = mf2w.spherical_to_gmao(np.deg2rad(x+10), np.deg2rad(90-y), gmao_face=nf+1)
             M = np.linalg.inv(M)
         elif change_of_basis == 'none':
             M = np.eye(2)
