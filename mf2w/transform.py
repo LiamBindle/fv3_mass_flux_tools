@@ -27,6 +27,67 @@ def great_circle_distance(lon0, lat0, lon1, lat1):
     return angle_rad * R_EARTH
 
 
+def sph2cart(pl, degrees=False):
+    if degrees:
+        pl = np.deg2rad(pl)
+
+    xyz_shape = list(pl.shape)
+    xyz_shape[-1] = 3
+    xyz = np.zeros(xyz_shape)
+
+    xyz[..., 0] = np.cos(pl[..., 0]) * np.cos(pl[..., 1])
+    xyz[..., 1] = np.cos(pl[..., 0]) * np.sin(pl[..., 1])
+    xyz[..., 2] = np.sin(pl[..., 0])
+
+    return xyz
+
+
+def cart2sph(xyz, degrees=False):
+    pl_shape = list(xyz.shape)
+    pl_shape[-1] = 2
+    pl = np.zeros(pl_shape)
+
+    pl[..., 0] = np.arcsin(xyz[..., 2])
+    pl[..., 1] = np.arctan2(xyz[..., 1], xyz[..., 0])
+
+    if degrees:
+        pl = np.rad2deg(pl)
+
+    return pl
+
+
+def get_uv2cart_cob_matrix(center_lat, center_lon, u_edge_lat, u_edge_lon, v_edge_lat, v_edge_lon):
+    center = sph2cart(np.concatenate((center_lat[..., np.newaxis], center_lon[..., np.newaxis]), -1), degrees=True)
+    u_edge = sph2cart(np.concatenate((u_edge_lat[..., np.newaxis], u_edge_lon[..., np.newaxis]), -1), degrees=True)
+    v_edge = sph2cart(np.concatenate((v_edge_lat[..., np.newaxis], v_edge_lon[..., np.newaxis]), -1), degrees=True)
+    u = u_edge - center
+    mag = np.sqrt(np.expand_dims(np.einsum('ijk,ijk->ij', u, u), -1))
+    u /= mag
+    v = v_edge - center
+    mag = np.sqrt(np.expand_dims(np.einsum('ijk,ijk->ij', v, v), -1))
+    v /= mag
+    return np.moveaxis([u, v], 0, -1)
+
+def get_cart2ne_cob_matrix(center_lat, center_lon):
+    x = np.deg2rad(center_lon)
+    y = np.deg2rad(center_lat)
+    M = np.zeros((*x.shape, 2, 3))
+    M[..., 0, 0] = -np.sin(x)
+    M[..., 0, 1] = np.cos(x)
+    M[..., 0, 2] = 0.0
+    M[..., 1, 0] = -np.sin(y)*np.cos(x)
+    M[..., 1, 1] = -np.sin(y)*np.sin(x)
+    M[..., 1, 2] = np.cos(y)
+    return M
+
+
+def get_cob_matrix(center_lat, center_lon, u_edge_lat, u_edge_lon, v_edge_lat, v_edge_lon):
+    M1 = get_cart2ne_cob_matrix(center_lat, center_lon)
+    M2 = get_uv2cart_cob_matrix(center_lat, center_lon, u_edge_lat, u_edge_lon, v_edge_lat, v_edge_lon)
+    cob = np.einsum('ijlm,ijmn->ijln', M1, M2)
+    return cob
+
+
 def unstagger_cubic_interp(x):
     assert len(x.shape) == 1
     assert len(x) >= 4

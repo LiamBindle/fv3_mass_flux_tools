@@ -11,6 +11,7 @@ def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
     nan_array = np.ones_like(tavg_1hr_ctm.MFXC) * np.nan
     ds_out['UA'] = xr.DataArray(nan_array.copy(), dims=dims)
     ds_out['VA'] = xr.DataArray(nan_array.copy(), dims=dims)
+    ds_out['WindSpeed'] = xr.DataArray(nan_array.copy(), dims=dims)
     for nf in tqdm(range(6), unit='cube_sphere_face', desc='Processing'):
         uc, vc = mf2w.transform.mass_fluxes_to_winds(tavg_1hr_ctm, grid, nf)
         ua, va = mf2w.transform.cgrid_to_agrid(uc, vc)
@@ -26,6 +27,17 @@ def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
             M = np.linalg.inv(M)
         elif change_of_basis == 'none':
             M = np.eye(2)
+        elif change_of_basis == 'grid_calculated':
+            print('here')
+            lats = grid.isel(nf=nf).lats.values
+            lons = grid.isel(nf=nf).lons.values
+            center_lats = lats[1::2, 1::2]
+            center_lons = lons[1::2, 1::2]
+            u_edge_lats = lats[1::2, 2::2]
+            u_edge_lons = lons[1::2, 2::2]
+            v_edge_lats = lats[2::2, 1::2]
+            v_edge_lons = lons[2::2, 1::2]
+            M = mf2w.transform.get_cob_matrix(center_lats, center_lons, u_edge_lats, u_edge_lons, v_edge_lats, v_edge_lons)
 
         M = np.broadcast_to(M, (*ua.shape, 2, 2))
         uv = np.concatenate((ua[..., np.newaxis], va[..., np.newaxis]), axis=-1)
@@ -34,6 +46,7 @@ def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
         assert np.all(np.isfinite(uv))
         ds_out['UA'][:, :, nf, :, :] = uv[..., 0]
         ds_out['VA'][:, :, nf, :, :] = uv[..., 1]
+        ds_out['WindSpeed'][:, :, nf, :, :] = np.sqrt(ua*ua + va*va)
     
     return ds_out
 

@@ -118,3 +118,42 @@ def test_loading_mass_fluxes():
     assert delpx.shape == (1, 72, 720, 721)
     assert mfyc.shape == (1, 72, 721, 720)
     assert delpy.shape == (1, 72, 721, 720)
+
+
+@dataclass
+class cart_sph_test:
+    cart_pt: list
+    sph_pt: list
+
+    def run_test(self):
+        cart = np.array([self.cart_pt])
+        sph = np.array([self.sph_pt])
+
+        result = mf2w.cart2sph(cart, True)
+        assert np.allclose(result, sph), f"cart2sph returned incorrect value"
+        result = mf2w.sph2cart(sph, True)
+        assert np.allclose(result, cart), f"sph2cart returned incorrect value"
+
+def test_cartesian_and_spherical_transforms():
+    cart_sph_test([1, 0, 0], [0, 0]).run_test()
+    cart_sph_test([0, 1, 0], [0, 90]).run_test()
+    cart_sph_test([0.25, 0.4330127019, 0.8660254038], [60, 60]).run_test()
+    cart_sph_test([-0.25, -0.4330127019, -0.8660254038], [-60, -120]).run_test()
+
+
+def test_latlon2cart_cob_matrix():
+    cob = mf2w.get_latlon2cart_cob_matrix([0., 0., 0., -45], [0., 90., 180., 0])
+    answer = np.array([
+        [[0, 1, 0], # 
+         [0, 0, 1]],
+        
+        [[-1, 0, 0],
+         [ 0, 0, 1]],
+
+        [[0, -1, 0],
+         [0,  0, 1]],
+
+        [[0, 1, 0],
+         [np.cos(np.pi/4), 0, np.cos(np.pi/4)]]
+    ])
+    assert np.allclose(cob, answer)
