@@ -7,7 +7,7 @@ import fv3_mass_flux_tools.convert
 import fv3_mass_flux_tools.interpolate
 
 
-def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, change_of_basis='ronchi', cubic_unstagger=True):
+def create_derived_wind_dataset(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, change_of_basis='ronchi', cubic_unstagger=True):
     ds_out = xr.Dataset(coords=tavg_1hr_ctm.coords)
     dims = tavg_1hr_ctm.MFXC.dims
     nan_array = np.ones_like(tavg_1hr_ctm.MFXC) * np.nan
@@ -45,4 +45,4 @@ def convert_mass_fluxes_to_wind(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
 if __name__ == '__main__':
     tavg_1hr_ctm = xr.open_dataset("data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4")
     grid = xr.open_mfdataset([f"data/c720.tile{n}.nc" for n in range(1,7)], concat_dim='nf', combine='nested')
-    convert_mass_fluxes_to_wind(tavg_1hr_ctm, grid, change_of_basis='ronchi')
+    create_derived_wind_dataset(tavg_1hr_ctm, grid, change_of_basis='ronchi')
