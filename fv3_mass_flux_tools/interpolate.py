@@ -15,8 +15,16 @@ def unstagger_cubic_interp(x):
     x_interp[1:-1] = a2 * (x0 + x3) + a1 * (x1 + x2)
     return x_interp
 
+
 def unstagger_linear_interp(x):
     assert len(x.shape) == 1
     assert len(x) >= 4
     x_interp = 0.5 * (x[0:-1] + x[1:])
     return x_interp
+
+
+def cgrid_to_agrid(uc, vc, cubic=True):
+    interp = unstagger_cubic_interp if cubic else unstagger_linear_interp
+    ua = np.apply_along_axis(interp, -1, uc)
+    va = np.apply_along_axis(interp, -2, vc)
+    return ua, va

@@ -5,6 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Process Example",
+            "type": "python",
+            "request": "launch",
+            "program": "fv3_mass_flux_tools/process.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}"
+            },
+            "args" : [
+                "data/GEOS.fp.asm.tavg_1hr_ctm_c0720_v72.20210401_0030.V01.nc4", 
+                "data/",
+                "data/"
+            ]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -12,7 +29,9 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
-            "env": { "PYTHONPATH": "${workspaceRoot}"}
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}"
+            }
         }
     ]
 }
