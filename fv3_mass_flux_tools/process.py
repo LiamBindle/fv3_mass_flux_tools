@@ -13,7 +13,7 @@ import fv3_mass_flux_tools.interpolate
 VERSION_NUMBER="0.0.0"
 
 
-def create_derived_wind_dataset(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, change_of_basis='ronchi', cubic_unstagger=True):
+def create_derived_wind_dataset(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, change_of_basis='ronchi', cubic_unstagger=True, disable_pbar=False):
     now = datetime.datetime.now()
     command = " ".join(sys.argv)
     file_attrs = dict(
@@ -56,7 +56,7 @@ def create_derived_wind_dataset(tavg_1hr_ctm: xr.Dataset, grid: xr.Dataset, chan
     ds_out['UA'].encoding = var_encoding
     ds_out['VA'] = xr.DataArray(nan_array.copy(), dims=dims, attrs=va_attrs)
     ds_out['VA'].encoding = var_encoding
-    for nf in tqdm(range(6), unit='cube_sphere_face', desc='Processing'):
+    for nf in tqdm(range(6), unit='cube_sphere_face', desc='Processing', disable=disable_pbar):
         uc, vc = fv3_mass_flux_tools.convert.convert_mass_fluxes_to_winds(tavg_1hr_ctm, grid, nf)
         ua, va = fv3_mass_flux_tools.interpolate.cgrid_to_agrid(uc, vc)
 
