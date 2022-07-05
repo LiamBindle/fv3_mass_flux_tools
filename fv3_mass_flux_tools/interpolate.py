@@ -28,3 +28,9 @@ def cgrid_to_agrid(uc, vc, cubic=True):
     ua = np.apply_along_axis(interp, -1, uc)
     va = np.apply_along_axis(interp, -2, vc)
     return ua, va
+
+def agrid_to_cgrid_interior_only(ua, va, cubic=True):
+    interp = unstagger_cubic_interp if cubic else unstagger_linear_interp
+    uc = np.apply_along_axis(interp, -1, ua)
+    vc = np.apply_along_axis(interp, -2, va)
+    return uc, vc

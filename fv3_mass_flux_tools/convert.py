@@ -83,3 +83,20 @@ def convert_mass_fluxes_to_winds(ds_mf: xr.Dataset, ds_grid: xr.Dataset, nf: int
     uc /= NUM_FV3_TIME_STEPS
     vc /= NUM_FV3_TIME_STEPS
     return uc, vc
+
+def convert_winds_to_mass_fluxes(ds_mf: xr.Dataset, ds_grid: xr.Dataset, nf: int, uc, vc, NUM_FV3_TIME_STEPS: int = 8):
+    # assume delpx and delpy are exactly correct
+    _, delpx = get_full_mfxc_delpx(ds_mf, nf)
+    _, delpy = get_full_mfyc_delpy(ds_mf, nf)
+
+    uc *= NUM_FV3_TIME_STEPS
+    vc *= NUM_FV3_TIME_STEPS
+
+    dx, dy = get_dx_dy_grid_spacing(ds_grid.isel(nf=nf))
+    mfxc = uc * (delpx*dy)
+    mfyc = vc * (delpy*dx)
+
+    mfxc = np.rad2deg(mfxc)
+    mfyc = np.rad2deg(mfyc)
+
+    return mfxc, mfyc

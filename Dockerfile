@@ -5,4 +5,5 @@ COPY ./setup.py /install_fv3_mass_flux_tools
 
 RUN pip install /install_fv3_mass_flux_tools
 
-ENTRYPOINT [ "python", "-m", "fv3_mass_flux_tools.process" ]
+#ENTRYPOINT [ "python", "-m", "fv3_mass_flux_tools.process" ]
+CMD ["bash"]
